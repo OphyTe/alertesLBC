@@ -43,14 +43,23 @@ function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSe
     if ( (minPrice == "" || price > minPrice) && (maxPrice == "" || price < maxPrice) ) {
       currentSearchAddedArticlesNbTab[0]++;
       body = body + "<li><a href=\"" + artUrl + "\">" + title + "</a> (" + price + "&nbsp;&euro; - " + place + ")";
-      // récupération de l'image désactivée à cause du lazy load mis en place sur le site ... :'(
-      /* var imgSrc = getAttrValue('src', articleData, 'img');
+      // récupération de l'image
+      var imgSrc = getImgUrl(artUrl);
       if (imgSrc != '') {
-        //imgSrc = 'http:' + imgSrc;
         log("imgSrc = " + imgSrc, levels.debug);
-        body = body + "<br/><a href=\"" + artUrl + '"><img src="' + imgSrc + '"/></a>';
-      }*/
+        body = body + "<br/><a href=\"" + artUrl + '"><img src="' + imgSrc + '" height="140"/></a>';
+      }
       body = body  + "</li>";
     }
   }
+
+}
+
+/**
+ * Récupère l'url de l'image associée à un article
+ */
+function getImgUrl(artUrl) {
+  var rep = UrlFetchApp.fetch(artUrl).getContentText();
+  var data = rep.substring(rep.indexOf('adview_gallery_container'));
+  return getAttrValue('src', data, 'img');  
 }
