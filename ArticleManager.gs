@@ -35,24 +35,40 @@ function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSe
     //var price = parseInt(priceTab.join(""));
 
     var title = getAttrValue('title', articleData);
-    var place = getMarkersContentByAttr('p', articleData, 'aditem_location');
-    var price = parseInt(getMarkersContentByAttr('span', articleData, 'itemprop="price"'));
-    log("title = " + title + '\n'
-      + "place = " + place + '\n'
-      + "price = " + price + '\n', levels.debug);
-    if ( (minPrice == "" || price > minPrice) && (maxPrice == "" || price < maxPrice) ) {
-      currentSearchAddedArticlesNbTab[0]++;
-      body = body + "<li><a href=\"" + artUrl + "\">" + title + "</a> (" + price + "&nbsp;&euro; - " + place + ")";
-      // récupération de l'image
-      var imgSrc = getImgUrl(artUrl);
-      if (imgSrc != '') {
-        log("imgSrc = " + imgSrc, levels.debug);
-        body = body + "<br/><a href=\"" + artUrl + '"><img src="' + imgSrc + '" height="140"/></a>';
+	if(title != '') {
+      var place = getMarkersContentByAttr('p', articleData, 'aditem_location');
+      var price = parseInt(getMarkersContentByAttr('span', articleData, 'itemprop="price"'));
+      log("title = " + title + '\n'
+        + "place = " + place + '\n'
+        + "price = " + price + '\n', levels.debug);
+      if ( (minPrice == "" || price > minPrice) && (maxPrice == "" || price < maxPrice) ) {
+        currentSearchAddedArticlesNbTab[0]++;
+        var imgNb = getImgNb(articleData);
+        body = body + "<li><a href=\"" + artUrl + "\">" + title + "</a> (" + price + "&nbsp;&euro; - " + place + ") - " + imgNb + ' photos';
+        // affichage de l'image
+        if (imgNb > 0) {
+         var imgSrc = getImgUrl(artUrl);
+         log("imgSrc = " + imgSrc, levels.debug);
+         body = body + "<br/><a href=\"" + artUrl + '"><img src="' + imgSrc + '" height="140"/></a>';
+        }
+        body = body  + "</li>";
       }
-      body = body  + "</li>";
-    }
+	}
   }
 
+} 
+
+/**
+ * Récupère le nombre d'images pour l'article
+ */
+function getImgNb(articleData) {
+  var cameraDataIndex = articleData.indexOf('camera');
+  var imgNb = 0;
+  if (cameraDataIndex > 0) {
+    var cameraData = articleData.substring(cameraDataIndex);
+  imgNb = getMarkersContent('span', cameraData);
+  }
+  return imgNb;
 }
 
 /**
