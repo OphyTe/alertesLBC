@@ -44,10 +44,10 @@ function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSe
       currentSearchAddedArticlesNbTab[0]++;
       body = body + "<li><a href=\"" + artUrl + "\">" + title + "</a> (" + price + "&nbsp;&euro; - " + place + ")";
       // récupération de l'image
-      var imgSrc = getImgUrl(artUrl);
-      if (imgSrc != '') {
-        log("imgSrc = " + imgSrc, levels.debug);
-        body = body + "<br/><a href=\"" + artUrl + '"><img src="' + imgSrc + '" height="140"/></a>';
+	  var imgNb = getImgNb(articleData);
+      var imgCode = getImgCode(artUrl, imgNb);
+      if (imgNb > 0) {
+        body = body + "<br/><a href=\"" + artUrl + '">' + imgCode + '</a>';
       }
       body = body  + "</li>";
     }
@@ -56,10 +56,31 @@ function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSe
 }
 
 /**
+ * Récupère le nombre d'images pour l'article
+ */
+function getImgNb(articleData) {
+  var cameraDataIndex = articleData.indexOf('camera');
+  var imgNb = 0;
+  if (cameraDataIndex > 0) {
+    var cameraData = articleData.substring(cameraDataIndex);
+	imgNb = getMarkersContent('span', cameraData);
+  }  	  
+  return imgNb;
+}
+
+/**
  * Récupère l'url de l'image associée à un article
  */
-function getImgUrl(artUrl) {
+function getImgCode(artUrl, imgNb) {
+  var imgCode = '';
+  var imgSrc = '';
   var rep = UrlFetchApp.fetch(artUrl).getContentText();
   var data = rep.substring(rep.indexOf('adview_gallery_container'));
-  return getAttrValue('src', data, 'img');  
+  for(i = 0; i<imgNb; i++) {
+    imgSrc = getAttrValue('src', data, 'img');
+    log("imgSrc = " + imgSrc, levels.debug);
+	imgCode += '<img src="' + imgSrc + '" height="140"/>' + '&nbsp;';
+	data = data.substring(data.indexOf('<img') + 4);
+  }
+  return imgCode;  
 }

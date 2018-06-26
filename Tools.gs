@@ -8,8 +8,8 @@
   //markerFilter = '<p class="item_supp"';
 
   var content = '';
-  if (markerFilter === undefined) markerFilter = marker;
-  var startIndex = data.indexOf(markerFilter);
+  //if (markerFilter === undefined) markerFilter = marker;
+  var startIndex = data.indexOf('<' + marker);
   if (startIndex >= -1) {
     var contentStartIndex = data.indexOf('>', startIndex) + 1;
     var contentEndIndex = data.indexOf('</' + marker + '>', contentStartIndex);
@@ -56,7 +56,7 @@
 
   var attrValue = '';
   var startIndex = 0;
-  if (markerFilter != undefined && data.indexOf(markerFilter) > -1) startIndex = data.indexOf(markerFilter);
+  if (markerFilter != undefined && data.indexOf(markerFilter) > -1) startIndex = data.indexOf('<' + markerFilter);
   var attrStartIndex = data.indexOf(attr + '="', startIndex) + attr.length + 2;
   if (attrStartIndex > attr.length + 2) {
     var attrEndIndex = data.indexOf('"', attrStartIndex);
