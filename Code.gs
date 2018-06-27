@@ -131,7 +131,7 @@ function processArticles (searchRowIndex, data) {
     var nextArticleIndex = data.indexOf("</li") + 6;
     var articleData = data.substring(currentArticleIndex, nextArticleIndex);
     // log("articleData : \n'" + articleData + "'", levels.debug);
-    processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSearchAddedArticlesNb);
+    if ( nextArticleIndex > currentArticleIndex ) currentSearchAddedArticlesNb = processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSearchAddedArticlesNb);
     data = data.substring(nextArticleIndex); // liste des articles de la page
   }
   if ( currentSearchAddedArticlesNb > 0 ) {

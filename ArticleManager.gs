@@ -4,10 +4,10 @@ function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSe
   var article;
   var articleData = getArticle(artUrl);
 
-  if(article == undefined){
+  if(articleData == undefined){
     log("L'url " + artUrl + " ne renvoie pas à un article", levels.error);
   } else {
-    article = new Article(getArticle(artUrl));
+    article = new Article(articleData);
     log("title = " + article.title + '\n'
         + "id = " + article.id + '\n'
         + "place = " + article.location + '\n'
@@ -33,16 +33,18 @@ function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSe
       if (isNaN(article.price)) priceDisplayed = '';
       if ( isNaN(article.price) || (minPrice == "" || article.price > minPrice) && (maxPrice == "" || article.price < maxPrice) ) {
         currentSearchAddedArticlesNb++;
-        body = body + "<li><a href=\"" + artUrl + "\">" + article.title + "</a> (" + priceDisplayed + article.location + ")";
+        body = body + "<li><a href=\"" + artUrl + "\">" + article.title + "</a> (" + priceDisplayed + article.location + " " + (article.isPro ? '<b><i>pro</i></b>' : '') + ")";
         // affichage des images
         if (article.photosNb > 0) {
           var imgCode = getImgCode(article);
-          body = body + "<br/><a href=\"" + artUrl + '"><img src="' + imgCode + '</a>';
+          body = body + "<br/>" + imgCode;
         }
         body = body  + "</li>";
       }
     }
   }
+  
+  return currentSearchAddedArticlesNb;
 }
 
 /**
@@ -72,7 +74,7 @@ function getImgCode(article) {
   for( i = 0; i < article.photosNb; i++ ) {
     imgSrc = article.photosList[i];
     log("imgSrc = " + imgSrc, levels.debug);
-    imgCode += '<img src="' + imgSrc + '"/>' + '&nbsp;';
+    imgCode += '<a href="' + article.url + '"><img src="' + imgSrc + '"/></a>' + '&nbsp;';
   }
   return imgCode;
 } 
