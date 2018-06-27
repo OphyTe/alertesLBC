@@ -1,11 +1,6 @@
-function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSearchAddedArticlesNbTab) {
-  //var artUrlStartIndex = articleData.indexOf("<a href") + 9; // index de la 1ère url de la liste
-  //var artUrl = "http:" + articleData.substring(artUrlStartIndex , articleData.indexOf(".htm", artUrlStartIndex) + 4); // lien vers le détail du 1er article
-  //var artId = extractid(artUrl);
-
-  var artUrl = "https://www.leboncoin.fr" + getAttrValue('href', articleData, '<a');
+function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSearchAddedArticlesNb) {
+  var artUrl = "https://www.leboncoin.fr" + getAttrValue('href', articleData, '<a'); // lien vers le détail du 1er article
   var artId = extractid(artUrl);
-
   log("artUrl = \"" + artUrl + "\"", levels.debug);
   log("artId = " + artId, levels.debug);
 
@@ -23,16 +18,8 @@ function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSe
     } catch (err) {
       log("ERREUR lors de l'ajout de l'article '" + artId + "'\n" + err, levels.error);
     }
-    //var title = articleData.substring(articleData.indexOf("title=") + 7 , articleData.indexOf("\"", articleData.indexOf("title=") + 7) );
     //var isProStartIndex = articleData.indexOf('<p class="item_supp">');
-    //var placeStartIndex = articleData.indexOf('<p class="item_supp">', isProStartIndex + 21) + 21; // 2ième occurence de item_supp
-    //var placeEndIndex = articleData.indexOf('</p>', placeStartIndex);
-    //var place = articleData.substring(placeStartIndex, placeEndIndex).trim();
     //var isProStartIndex = articleData.indexOf('<span class="ispro">');
-    //var priceTabStartIndex = articleData.indexOf('<h3 class="item_price"') + 23;
-    //var priceTabEndIndex = articleData.indexOf('&nbsp;&euro;</h3>', priceTabStartIndex);
-    //var priceTab = articleData.substring(priceTabStartIndex, priceTabEndIndex).trim().split(" ");
-    //var price = parseInt(priceTab.join(""));
 
     var title = getAttrValue('title', articleData);
 	if(title != '') {
@@ -41,10 +28,12 @@ function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSe
       log("title = " + title + '\n'
         + "place = " + place + '\n'
         + "price = " + price + '\n', levels.debug);
-      if ( (minPrice == "" || price > minPrice) && (maxPrice == "" || price < maxPrice) ) {
-        currentSearchAddedArticlesNbTab[0]++;
+      var priceDisplayed = price + "&nbsp;&euro; - ";
+      if (isNaN(price)) priceDisplayed = '';
+      if ( isNaN(price) || (minPrice == "" || price > minPrice) && (maxPrice == "" || price < maxPrice) ) {
+        currentSearchAddedArticlesNb++;
         var imgNb = getImgNb(articleData);
-        body = body + "<li><a href=\"" + artUrl + "\">" + title + "</a> (" + price + "&nbsp;&euro; - " + place + ") - " + imgNb + ' photos';
+        body = body + "<li><a href=\"" + artUrl + "\">" + title + "</a> (" + priceDisplayed + place + ") - " + imgNb + ' photos';
         // affichage de l'image
         if (imgNb > 0) {
          var imgSrc = getImgUrl(artUrl);
@@ -78,4 +67,20 @@ function getImgUrl(artUrl) {
   var rep = UrlFetchApp.fetch(artUrl).getContentText();
   var data = rep.substring(rep.indexOf('adview_gallery_container'));
   return getAttrValue('src', data, 'img');  
+}
+
+/**
+* Extraction de l'id d'un article à partir de l'url de détail de l'article
+*/
+function extractid(url){
+  return url.substring(url.indexOf("/",25) + 1, url.indexOf(".htm"));
+}
+
+/**
+* Récupération du code HTML de la liste des articles
+*/
+function getArticlesListDivData(html){
+  var startListArticlesTab = html.indexOf('<li', html.indexOf('<div class="react-tabs__tab-panel react-tabs__tab-panel--selected"'));
+  var endListArticlesTab = html.indexOf('</ul>', startListArticlesTab);
+  return html.substring(startListArticlesTab, endListArticlesTab);
 }

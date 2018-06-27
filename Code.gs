@@ -82,7 +82,7 @@ function lbc(){
       minPrice = dataSheet.getRange(currentRow,minPriceColomn).getValue();
       maxPrice = dataSheet.getRange(currentRow,maxPriceColomn).getValue();
       // Aucune annonce ne répond aux critères
-      if(rep.indexOf("Aucune annonce") >= 0){
+      if(rep.indexOf("aucun résultat") >= 0){
         log("Aucune annonce pour la recherche \"" + searchLabel + "\" !", levels.info);
       } else {
         var data = getArticlesListDivData(rep);
@@ -131,9 +131,7 @@ function processArticles (searchRowIndex, data) {
     var nextArticleIndex = data.indexOf("</li") + 6;
     var articleData = data.substring(currentArticleIndex, nextArticleIndex);
     // log("articleData : \n'" + articleData + "'", levels.debug);
-    currentSearchAddedArticlesNbTab = [currentSearchAddedArticlesNb];
-    processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSearchAddedArticlesNbTab);
-    currentSearchAddedArticlesNb = parseInt(currentSearchAddedArticlesNbTab.join(''));
+    processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSearchAddedArticlesNb);
     data = data.substring(nextArticleIndex); // liste des articles de la page
   }
   if ( currentSearchAddedArticlesNb > 0 ) {
@@ -206,7 +204,7 @@ function setup(){
   while(dataSheet.getRange(firstDataRow+i,urlColomn).getValue() != ""){
     if(dataSheet.getRange(firstDataRow+i,lastProductIdColomn).getValue() == ""){
       var rep = UrlFetchApp.fetch(dataSheet.getRange(firstDataRow+i,urlColomn).getValue()).getContentText();
-      if(rep.indexOf("Aucune annonce") < 0){
+      if(rep.indexOf("aucun résultat") < 0){
         var data = getArticlesListDivData(rep);
         if (logLevel < levels.debugReadOnly) {
            dataSheet.getRange(firstDataRow+i,lastProductIdColomn).setValue(extractid(data.substring(startUrlIndex , data.indexOf(".htm", startUrlIndex) + 4)));
@@ -245,44 +243,6 @@ function setupmail(){
       Browser.msgBox("Email " + PropertiesService.getScriptProperties().getProperty('email') + " ajouté");
       log("Email " + PropertiesService.getScriptProperties().getProperty('email') + " ajouté", levels.info);
     }
-  }
-}
-
-/**
-* Extraction de l'id d'un article
-*/
-function extractid(id){
-  return id.substring(id.indexOf("/",25) + 1,id.indexOf(".htm"));
-}
-
-/**
-* Récupération du code HTML de la liste des articles
-*/
-function getArticlesListDivData(text){
-  var startListArticlesTab = text.indexOf('<li', text.indexOf('<div class="react-tabs__tab-panel react-tabs__tab-panel--selected"'));
-  var endListArticlesTab = text.indexOf('</ul>', startListArticlesTab);
-  /*var startArticleDetail = text.indexOf('<li', startListArticlesTab);
-  var endArticleDetail = text.indexOf('</li', startArticleDetail);
-  var debut = text.indexOf('<ul class="tabsContent');
-  var fin = text.indexOf("</ul>", debut);
-  var debut = text.indexOf("<div class=\"list-lbc\">");
-  var fin = text.indexOf("<div id=\"alertesCartouche\">") == -1 || text.indexOf("<div class=\"list-gallery\">") < text.indexOf("<div id=\"alertesCartouche\">")  ? text.indexOf("<div class=\"list-gallery\">") : text.indexOf("<div id=\"alertesCartouche\">");
-  return text.substring(debut + "<ul class=\"tabsContent\"".length,fin);*/
-  return text.substring(startListArticlesTab, endListArticlesTab);
-}
-
-/**
- * Retourne les liens des images à afficher
- */
-function getImgLinks(artUrl) {
-  var rep = UrlFetchApp.fetch(artUrl).getContentText();
-  var thumbnailsDivData = rep.substring(rep.indexOf('<div id="thumbs_carousel">') + 26 , rep.indexOf("</div>", rep.indexOf('<div id="thumbs_carousel">') + 26) );
-  var imgUrl;
-  log("aThumbsPhotos = " + aThumbsPhotos, debug);
-  log("aPhotos = " + aPhotos, debug);
-  while(thumbnailsDivData.indexOf('background-image: url("http', 1) > 0){
-    thumbnailsDivData = thumbnailsDivData.substr(thumbnailsDivData.indexOf('background-image: url("http', 1) + 23);
-    imgUrl = thumbnailsDivData.substring(0 , thumbnailsDivData.indexOf("\");'></span>"));
   }
 }
 
@@ -326,7 +286,8 @@ function defineSearchUrls(dataCurrentRow) {
       if (currentCategoryLabel == searchedCategoryLabel) {
         var searchCategoryTextUrl = categoriesSheet.getRange(currentCategoryRow,categoryTextUrlColomn).getValue();
         var formatedTextUrl = formatTextUrl(searchLabel);
-        currentSearchUrl = "http://www.leboncoin.fr/" + searchCategoryTextUrl + "/offres/aquitaine/gironde/33/?q=" + formatedTextUrl;
+        currentSearchUrl = "https://www.leboncoin.fr/recherche/?text=" + formatedTextUrl + "&category=" + searchCategoryTextUrl + "&region=2&departement=33";
+        // par exemple https://www.leboncoin.fr/recherche/?text=hotte&category=20&region=2&departement=33        
         if (logLevel < levels.debugReadOnly) {
           dataSheet.getRange(dataCurrentRow,urlColomn).setValue(currentSearchUrl);
           log("url de recherche desktop définie : " + currentSearchUrl, levels.info);
