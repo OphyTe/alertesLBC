@@ -1,4 +1,4 @@
-function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSearchAddedArticlesNb) {
+function processArticle(articleData, oldLastArtIdsTab, currentSearchAddedArticlesNb) {
   var artUrl = "https://www.leboncoin.fr" + getAttrValue('href', articleData, '<a'); // lien vers le détail du 1er article
   log("artUrl = \"" + artUrl + "\"", levels.debug);
   var article;
@@ -22,7 +22,7 @@ function processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSe
         oldLastArtIdsTab.sort(function(a, b){return b-a}); // on trie le tableau de manière décroissante
         log("oldLastArtIdsTab.valueOf() = " + oldLastArtIdsTab.valueOf(), levels.debug);
         if (logLevel < levels.debugReadOnly) {
-          dataSheet.getRange(searchRowIndex,lastProductIdColomn).setValue(oldLastArtIdsTab.toString()) // on met à jour la cellule correspondante du classeur
+          dataSheet.getRange(processedIdsCell.row, processedIdsCell.col).setValue(oldLastArtIdsTab.toString()) // on met à jour la cellule correspondante du classeur
         }
         log("Nouvel article ajouté : " + article.id, levels.info);
       } catch (err) {

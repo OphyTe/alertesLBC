@@ -20,6 +20,8 @@ var categoryIdColomn = 1;
 var categoryTextUrlColomn = 2;
 var categoryLabelColomn = 3;
 
+var processedIdsCell = { row: 1, col: 4 };
+
 // Variables globales
 var levels = {
   separator: -1,
@@ -86,7 +88,7 @@ function lbc(){
         log("Aucune annonce pour la recherche \"" + searchLabel + "\" !", levels.info);
       } else {
         var data = getArticlesListDivData(rep);
-        processArticles(currentRow, data);
+        processArticles(data);
       }    
       currentRow++;
     }
@@ -112,8 +114,8 @@ function lbc(){
 /**
  * Fonction itérant sur la liste des articles de la recherche en cours
  */
-function processArticles (searchRowIndex, data) {
-  var oldLastArtIdsList = dataSheet.getRange(searchRowIndex,lastProductIdColomn).getValue();
+function processArticles (data) {
+  var oldLastArtIdsList = dataSheet.getRange(processedIdsCell.row, processedIdsCell.col).getValue();
   var oldLastArtIdsTab = oldLastArtIdsList == "" ? [] : oldLastArtIdsList.split(","); // tableau des ids des articles déjà traités  
   var processedArtNb = 0;
   var currentSearchAddedArticlesNb = 0;
@@ -121,7 +123,6 @@ function processArticles (searchRowIndex, data) {
     log("Aucun article enregistré", levels.info);
   } else {
     log("Articles enregistrés : '" + oldLastArtIdsList + "'", levels.debug);
-    //oldLastArtIdsTab = cleanOldArticles(oldLastArtIdsTab);
   }
   // Itération sur les articles de la page
   while(data.indexOf("<a", 1) > 0){
@@ -131,7 +132,7 @@ function processArticles (searchRowIndex, data) {
     var nextArticleIndex = data.indexOf("</li") + 6;
     var articleData = data.substring(currentArticleIndex, nextArticleIndex);
     // log("articleData : \n'" + articleData + "'", levels.debug);
-    if ( nextArticleIndex > currentArticleIndex ) currentSearchAddedArticlesNb = processArticle(articleData, oldLastArtIdsTab, searchRowIndex, currentSearchAddedArticlesNb);
+    if ( nextArticleIndex > currentArticleIndex ) currentSearchAddedArticlesNb = processArticle(articleData, oldLastArtIdsTab, currentSearchAddedArticlesNb);
     data = data.substring(nextArticleIndex); // liste des articles de la page
   }
   if ( currentSearchAddedArticlesNb > 0 ) {
@@ -145,7 +146,7 @@ function processArticles (searchRowIndex, data) {
     }
   }
   //if (logLevel < levels.debugReadOnly) {
-  //   dataSheet.getRange(searchRowIndex,lastProductIdColomn).setValue(artId);
+  //   dataSheet.getRange(processedIdsCell.row, processedIdsCell.col).setValue(artId);
   //}
   if (logLevel >= levels.debug) {
     log(processedArtNb + " articles analysés ; " + currentSearchAddedArticlesNb + " articles ajoutés ; " + addedArticlesTotalNb + " articles ajoutés au total", levels.info);
@@ -160,62 +161,40 @@ function processArticles (searchRowIndex, data) {
  */
  function cleanOldArticles() {
    var currentRow = firstDataRow;
-   while(!(dataSheet.getRange(currentRow,urlColomn).getValue() == "" && dataSheet.getRange(currentRow,categoryColomn).getValue() == "")){
-     var oldLastArtIdsList = dataSheet.getRange(currentRow,lastProductIdColomn).getValue();
-     var oldLastArtIdsTab = oldLastArtIdsList == "" ? [] : oldLastArtIdsList.split(","); // tableau des ids des articles déjà traités
-     var currentSearchDeletededArticlesNb = 0;
-     searchLabel = dataSheet.getRange(currentRow,searchLabelColomn).getValue();
-     var i = 0;
-     while (i < oldLastArtIdsTab.length) {
-       try {
-         //var searchCategoryTextUrl = categoriesSheet.getRange(currentCategoryRow,categoryTextUrlColomn).getValue();
-         var currentOldArtUrl = "http://www.leboncoin.fr/offre/" + oldLastArtIdsTab[i] + ".htm";       
-         var httpResponse = UrlFetchApp.fetch(currentOldArtUrl);
-         /*if (httpResponse.getResponseCode() == 404) {
-         oldLastArtIdsTab.splice(i,1);
-         log("Article n°" + oldLastArtIdsTab[i] + " inexistant : " + currentOldArtUrl, levels.debug);
-         } else {*/
-         i++;
-         //}
-       } catch (err) {
-         //log("Erreur sur le traitement du tableau 'oldLastArtIdsTab' : " + err.message, levels.error);
-         //log("httpResponse.getResponseCode() = " + httpResponse.getResponseCode(), levels.debug);
-         //log("oldLastArtIdsTab = " + oldLastArtIdsTab, levels.error);
-         log("L'article n°" + oldLastArtIdsTab[i] + " a été supprimé (" + currentOldArtUrl + ")", levels.info);
-         currentSearchDeletededArticlesNb++;
-         oldLastArtIdsTab.splice(i,1);
-       }
+   var oldLastArtIdsList = dataSheet.getRange(processedIdsCell.row, processedIdsCell.col).getValue();
+   var oldLastArtIdsTab = oldLastArtIdsList == "" ? [] : oldLastArtIdsList.split(","); // tableau des ids des articles déjà traités
+   var currentSearchDeletededArticlesNb = 0;
+   var i = 0;
+   while (i < oldLastArtIdsTab.length) {
+     try {
+       var currentOldArtUrl = "http://www.leboncoin.fr/offre/" + oldLastArtIdsTab[i] + ".htm";       
+       var httpResponse = UrlFetchApp.fetch(currentOldArtUrl);
+       /*if (httpResponse.getResponseCode() == 404) {
+       oldLastArtIdsTab.splice(i,1);
+       log("Article n°" + oldLastArtIdsTab[i] + " inexistant : " + currentOldArtUrl, levels.debug);
+       } else {*/
+       i++;
+       //}
+     } catch (err) {
+       //log("Erreur sur le traitement du tableau 'oldLastArtIdsTab' : " + err.message, levels.error);
+       //log("httpResponse.getResponseCode() = " + httpResponse.getResponseCode(), levels.debug);
+       //log("oldLastArtIdsTab = " + oldLastArtIdsTab, levels.error);
+       log("L'article n°" + oldLastArtIdsTab[i] + " a été supprimé (" + currentOldArtUrl + ")", levels.info);
+       currentSearchDeletededArticlesNb++;
+       oldLastArtIdsTab.splice(i,1);
      }
-     if (logLevel < levels.debugReadOnly) {
-        dataSheet.getRange(currentRow,lastProductIdColomn).setValue(oldLastArtIdsTab.toString()) // on met à jour la cellule correspondante du classeur
-     }
-     log(currentSearchDeletededArticlesNb + " articles supprimés pour " + searchLabel, levels.info);
-     log("Articles enregistrés après suppression des articles obsolètes : '" + oldLastArtIdsTab + "'", levels.debug);
-     currentRow++;
    }
+   if (logLevel < levels.debugReadOnly) {
+      dataSheet.getRange(processedIdsCell.row, processedIdsCell.col).setValue(oldLastArtIdsTab.toString()) // on met à jour la cellule correspondante du classeur
+   }
+   log(currentSearchDeletededArticlesNb + " articles supprimés", levels.info);
+   log("Articles enregistrés après suppression des articles obsolètes : '" + oldLastArtIdsTab + "'", levels.debug);
  }
 
 
-function setup(){
+function checkMail(){
   if(ScriptProperties.getProperty('email') == "" || ScriptProperties.getProperty('email') == null ){
     Browser.msgBox("L'email du destinataire n'est pas définit. Allez dans le menu \"Lbc Alertes\" puis \"Gérer email\".");
-  }
-  var i = 0;
-  while(dataSheet.getRange(firstDataRow+i,urlColomn).getValue() != ""){
-    if(dataSheet.getRange(firstDataRow+i,lastProductIdColomn).getValue() == ""){
-      var rep = UrlFetchApp.fetch(dataSheet.getRange(firstDataRow+i,urlColomn).getValue()).getContentText();
-      if(rep.indexOf("aucun résultat") < 0){
-        var data = getArticlesListDivData(rep);
-        if (logLevel < levels.debugReadOnly) {
-           dataSheet.getRange(firstDataRow+i,lastProductIdColomn).setValue(extractid(data.substring(startUrlIndex , data.indexOf(".htm", startUrlIndex) + 4)));
-        }
-      }else{
-        if (logLevel < levels.debugReadOnly) {
-           dataSheet.getRange(firstDataRow+i,lastProductIdColomn).setValue(123);
-        }
-      }
-    }
-    i++;
   }
 }
 
@@ -250,25 +229,23 @@ function setupmail(){
 function onOpen() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet();
   var entries = [{
-    /*name : "Setup recherche",
-    functionName : "setup"
-  },{*/
     name : "Lancer manuellement",
     functionName : "lbc"
-  },{
+  },/*{
     name : "Créer une nouvelle alerte",
     functionName : "createAlert"
-  },{
+  },*/{
     name : "Gérer email",
     functionName : "setupmail"
   },{
     name : "Nettoyer les vieux articles consultés",
     functionName : "cleanOldArticles"
-  }/*,{
+  },{
     name : "Changer le niveau de log",
     functionName : "switchLogLevel"
-  }*/];
+  }];
   sheet.addMenu("Lbc Alertes", entries);
+  checkMail();
 };
 
 
